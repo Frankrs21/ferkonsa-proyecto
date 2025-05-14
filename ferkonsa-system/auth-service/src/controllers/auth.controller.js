@@ -1,6 +1,8 @@
 const pool = require("../db/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { sendApprovalEmail } = require("../utils/mailer");
+
 
 // REGISTRO DE USUARIO
 const register = async (req, res) => {
@@ -27,6 +29,9 @@ const register = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, 2) RETURNING id_usuario`,
       [nombre, apellido, correo, hashedPassword, id_rol]
     );
+
+    await sendApprovalEmail("mr.yauale@gmail.com", resultado.rows[0].id_usuario); //aqui agrege 0000000000000000000000000000000000000000000000000000000000
+
 
     return res.status(201).json({
       mensaje: "Usuario registrado correctamente. Esperando aprobación del superadministrador.",
