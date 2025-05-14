@@ -31,5 +31,20 @@ const sendApprovalEmail = async (adminEmail, usuarioId) => {
     .catch((err) => console.error("❌ Error al enviar correo:", err));
 };
 
-module.exports = { sendApprovalEmail };
+const sendRecoveryEmail = (correo, token) => {
+  const url = `http://localhost:3000/api/auth/restablecer/${token}`;
+  const html = `
+    <p>Has solicitado recuperar tu contraseña.</p>
+    <p>Haz clic aquí para restablecerla (válido por 15 minutos):</p>
+    <a href="${url}">${url}</a>
+  `;
+  return transporter.sendMail({
+    from: `"FERKONSA" <${process.env.EMAIL_SENDER}>`,
+    to: correo,
+    subject: "Recuperación de contraseña",
+    html
+  });
+};
+
+module.exports = { sendApprovalEmail, sendRecoveryEmail };
 
