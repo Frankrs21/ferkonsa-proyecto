@@ -1,6 +1,4 @@
 const express = require("express");
-const { register, login } = require("../controllers/auth.controller");
-const { register, login, recuperarPassword } = require("../controllers/auth.controller");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -16,7 +14,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/recuperar", recuperarPassword);
 
-//Ruta para el cambio de contraseña mediante el token por correo
+// Ruta para restablecer contraseña con token
 router.post("/restablecer/:token", async (req, res) => {
   const { token } = req.params;
   const { nuevaContraseña } = req.body;
@@ -38,3 +36,5 @@ router.post("/restablecer/:token", async (req, res) => {
 });
 
 module.exports = router;
+
+

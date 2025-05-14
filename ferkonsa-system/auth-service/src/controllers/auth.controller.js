@@ -107,5 +107,5 @@ const recuperarPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+module.exports = { register, login, recuperarPassword };
 
