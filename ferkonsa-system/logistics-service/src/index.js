@@ -7,6 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/vehiculos", require("./routes/vehiculo.routes"));
+app.use("/api/choferes", require("./routes/chofer.routes"));
 
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
