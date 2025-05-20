@@ -2,12 +2,36 @@ version: '3.8'
 
 services:
   auth-service:
-    build:
-      context: ./auth-service
-    container_name: auth-service
+    build: ./auth-service
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://postgres:Almejo.Pass.%4069@host.docker.internal:5432/proyecto_ferkonsa
-      - JWT_SECRET=clave_super_secreta
-      - PORT=3000
+      - PORT=3001
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=2105.Satu
+      - DB_NAME=proyecto_ferkonsa
+  logistics-service:
+    build: ./logistics-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=2105.Satu
+      - DB_NAME=proyecto_ferkonsa
+  
+  user-service:
+    build: ./user-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=2105.Satu
+      - DB_NAME=proyecto_ferkonsa
