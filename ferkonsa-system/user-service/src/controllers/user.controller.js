@@ -6,27 +6,33 @@ const agregarUsuario = async (req, res) => {
   const { nombre, apellido, correo, contraseña, id_rol, id_estado_usuario } = req.body;
 
   try {
-    // Verificar si el correo ya está en uso
     const existe = await pool.query("SELECT 1 FROM usuario WHERE correo = $1", [correo]);
     if (existe.rowCount > 0) {
       return res.status(409).json({ error: "Este correo ya está registrado" });
     }
 
-    // Encriptar contraseña
     const hash = await bcrypt.hash(contraseña, 10);
 
-    // Insertar nuevo usuario
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO usuario (nombre, apellido, correo, contraseña, id_rol, id_estado_usuario)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id_usuario`,
       [nombre, apellido, correo, hash, id_rol, id_estado_usuario]
     );
+
+    const id_usuario = result.rows[0].id_usuario;
+
+    if (id_rol == 2) {
+      await pool.query(
+        `INSERT INTO chofer (id_usuario, id_estado_general) VALUES ($1, 1)`,
+        [id_usuario]
+      );
+    }
 
     res.status(201).json({ mensaje: "Usuario creado exitosamente" });
 
   } catch (err) {
     console.error("Error al crear usuario:", err);
-    res.status(500).json({ error: "Error interno al crear usuario" });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -45,9 +51,11 @@ const getUsuarios = async (req, res) => {
 const deleteUsuario = async (req, res) => {
   const { id } = req.params;
   try {
+    await pool.query("DELETE FROM chofer WHERE id_usuario = $1", [id]);
     await pool.query("DELETE FROM usuario WHERE id_usuario = $1", [id]);
     res.json({ mensaje: "Usuario eliminado correctamente" });
   } catch (err) {
+    console.error("Error al eliminar usuario:", err);
     res.status(500).json({ error: "Error al eliminar usuario" });
   }
 };
@@ -58,15 +66,28 @@ const updateUsuario = async (req, res) => {
   const { nombre, apellido, correo, id_rol, id_estado_usuario } = req.body;
 
   try {
-    await pool.query(`
-      UPDATE usuario 
-      SET nombre = $1, apellido = $2, correo = $3, id_rol = $4, id_estado_usuario = $5 
-      WHERE id_usuario = $6
-    `, [nombre, apellido, correo, id_rol, id_estado_usuario, id]);
+    await pool.query(
+      `UPDATE usuario 
+       SET nombre = $1, apellido = $2, correo = $3, id_rol = $4, id_estado_usuario = $5 
+       WHERE id_usuario = $6`,
+      [nombre, apellido, correo, id_rol, id_estado_usuario, id]
+    );
+
+    const esChofer = await pool.query("SELECT * FROM chofer WHERE id_usuario = $1", [id]);
+
+    if (id_rol == 2) {
+      if (esChofer.rowCount === 0) {
+        await pool.query(`INSERT INTO chofer (id_usuario) VALUES ($1)`, [id]);
+      }
+    } else {
+      if (esChofer.rowCount > 0) {
+        await pool.query("DELETE FROM chofer WHERE id_usuario = $1", [id]);
+      }
+    }
 
     res.json({ mensaje: "Usuario actualizado correctamente" });
   } catch (err) {
-    console.error(err);
+    console.error("Error al actualizar usuario:", err);
     res.status(500).json({ error: "Error al actualizar usuario" });
   }
 };
@@ -94,14 +115,15 @@ const getUsuariosFiltrados = async (req, res) => {
     const result = await pool.query(query, valores);
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Error al filtrar usuarios:", err);
     res.status(500).json({ error: "Error al filtrar usuarios" });
   }
 };
+
 module.exports = {
-    getUsuarios,
-    deleteUsuario,
-    updateUsuario,
-    getUsuariosFiltrados,
-    agregarUsuario
+  getUsuarios,
+  deleteUsuario,
+  updateUsuario,
+  getUsuariosFiltrados,
+  agregarUsuario
 };
