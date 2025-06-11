@@ -82,7 +82,7 @@ export default function Sidebar() {
           </button>
           {openMenu === "choferes" && (
             <div className="ml-6 mt-1 flex flex-col gap-1">
-              <NavLink to="/admin/choferes/listar" className="text-gray-600 hover:text-[#ff0400]">Listar</NavLink>
+               <NavLink to="/admin/vehiculos/listar" className="block px-4 py-2 hover:bg-[#ff0400]/10">Listar</NavLink>
             </div>
           )}
         </div>

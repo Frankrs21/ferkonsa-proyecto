@@ -98,62 +98,46 @@ const updateUsuario = async (req, res) => {
 
 // Filtrar usuarios por rol y/o estado
 const getUsuariosFiltrados = async (req, res) => {
-  const { rol, estado } = req.query;
-  let query = "SELECT * FROM usuario";
+  const { rol, estado, query } = req.query;
+  const condiciones = [];
   const valores = [];
 
-  if (rol || estado) {
-    query += " WHERE";
-    if (rol) {
-      valores.push(rol);
-      query += ` id_rol = $${valores.length}`;
-    }
-    if (estado) {
-      if (rol) query += " AND";
-      valores.push(estado);
-      query += ` id_estado_usuario = $${valores.length}`;
-    }
+  let sql = "SELECT * FROM usuario";
+
+  if (rol) {
+    condiciones.push(`id_rol = $${valores.length + 1}`);
+    valores.push(rol);
   }
+
+  if (estado) {
+    condiciones.push(`id_estado_usuario = $${valores.length + 1}`);
+    valores.push(estado);
+  }
+
+  if (query && query.trim() !== "") {
+    condiciones.push(`(LOWER(nombre) LIKE $${valores.length + 1} OR LOWER(apellido) LIKE $${valores.length + 1})`);
+    valores.push(`%${query.toLowerCase()}%`);
+  }
+
+  if (condiciones.length > 0) {
+    sql += " WHERE " + condiciones.join(" AND ");
+  }
+
+  sql += " ORDER BY id_usuario ASC";
 
   try {
-    const result = await pool.query(query, valores);
+    const result = await pool.query(sql, valores);
     res.json(result.rows);
   } catch (err) {
-    console.error("Error al filtrar usuarios:", err);
-    res.status(500).json({ error: "Error al filtrar usuarios" });
+    console.error("Error al filtrar/buscar usuarios:", err);
+    res.status(500).json({ error: "Error al filtrar/buscar usuarios" });
   }
 };
-
-//Buscar usuarios por nombre o apellido 
-const buscarUsuariosPorNombreApellido = async (req, res) => {
-  const { query } = req.query;
-
-  if (!query || query.trim() === "") {
-    return res.status(400).json({ error: "El parámetro 'query' es requerido." });
-  }
-
-  try {
-    const result = await pool.query(
-      `SELECT * FROM usuario
-       WHERE LOWER(nombre) LIKE LOWER($1)
-       OR LOWER(apellido) LIKE LOWER($1)
-       ORDER BY id_usuario ASC`,
-      [`%${query}%`]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error al buscar usuarios:", err);
-    res.status(500).json({ error: "Error al buscar usuarios" });
-  }
-};
-
-
 
 module.exports = {
   agregarUsuario,
   getUsuarios,
   deleteUsuario,
   updateUsuario,
-  getUsuariosFiltrados,
-  buscarUsuariosPorNombreApellido
+  getUsuariosFiltrados
 };

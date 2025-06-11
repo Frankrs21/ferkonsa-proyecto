@@ -1,20 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   agregarUsuario,
   getUsuarios,
   deleteUsuario,
   updateUsuario,
-  getUsuariosFiltrados,
-  buscarUsuariosPorNombreApellido
-} = require('../controllers/user.controller');
+  getUsuariosFiltrados
+} = require("../controllers/user.controller");
 
-
-router.get('/', getUsuarios);                     // GET /api/usuarios
-router.get('/filtrar', getUsuariosFiltrados);     // GET /api/usuarios/filtrar
-router.get('/buscar', buscarUsuariosPorNombreApellido); // GET /api/usuarios/buscar
-router.post('/', agregarUsuario);                 // POST /api/usuarios
-router.put('/:id', updateUsuario);                // PUT /api/usuarios/:id
-router.delete('/:id', deleteUsuario);             // DELETE /api/usuarios/:id
+router.get("/", getUsuariosFiltrados); // búsqueda y filtros combinados
+router.get("/all", getUsuarios);       // obtener todos sin filtro
+router.post("/", agregarUsuario);
+router.put("/:id", updateUsuario);
+router.delete("/:id", deleteUsuario);
 
 module.exports = router;
