@@ -4,4 +4,3 @@ import CrearUsuario from "./pages/CrearUsuario";
   {/* otras rutas */}
   <Route path="/admin/crear-usuario" element={<CrearUsuario />} />
 </Routes>
-npm run dev
