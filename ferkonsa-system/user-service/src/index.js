@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ⚠️ Esto es clave
 app.use("/api/usuarios", require("./routes/user.routes"));
 
 const PORT = process.env.PORT || 3002;

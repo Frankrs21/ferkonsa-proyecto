@@ -21,6 +21,7 @@ const agregarUsuario = async (req, res) => {
 
     const id_usuario = result.rows[0].id_usuario;
 
+    // Si el rol es chofer (2), crear en tabla chofer con estado disponible (1)
     if (id_rol == 2) {
       await pool.query(
         `INSERT INTO chofer (id_usuario, id_estado_general) VALUES ($1, 1)`,
@@ -73,11 +74,14 @@ const updateUsuario = async (req, res) => {
       [nombre, apellido, correo, id_rol, id_estado_usuario, id]
     );
 
-    const esChofer = await pool.query("SELECT * FROM chofer WHERE id_usuario = $1", [id]);
+    const esChofer = await pool.query("SELECT 1 FROM chofer WHERE id_usuario = $1", [id]);
 
     if (id_rol == 2) {
       if (esChofer.rowCount === 0) {
-        await pool.query(`INSERT INTO chofer (id_usuario) VALUES ($1)`, [id]);
+        await pool.query(
+          `INSERT INTO chofer (id_usuario, id_estado_general) VALUES ($1, 1)`,
+          [id]
+        );
       }
     } else {
       if (esChofer.rowCount > 0) {
@@ -92,7 +96,7 @@ const updateUsuario = async (req, res) => {
   }
 };
 
-// Filtrar por rol o estado
+// Filtrar usuarios por rol y/o estado
 const getUsuariosFiltrados = async (req, res) => {
   const { rol, estado } = req.query;
   let query = "SELECT * FROM usuario";
@@ -120,10 +124,36 @@ const getUsuariosFiltrados = async (req, res) => {
   }
 };
 
+//Buscar usuarios por nombre o apellido 
+const buscarUsuariosPorNombreApellido = async (req, res) => {
+  const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    return res.status(400).json({ error: "El parámetro 'query' es requerido." });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM usuario
+       WHERE LOWER(nombre) LIKE LOWER($1)
+       OR LOWER(apellido) LIKE LOWER($1)
+       ORDER BY id_usuario ASC`,
+      [`%${query}%`]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al buscar usuarios:", err);
+    res.status(500).json({ error: "Error al buscar usuarios" });
+  }
+};
+
+
+
 module.exports = {
+  agregarUsuario,
   getUsuarios,
   deleteUsuario,
   updateUsuario,
   getUsuariosFiltrados,
-  agregarUsuario
+  buscarUsuariosPorNombreApellido
 };
