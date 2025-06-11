@@ -1,15 +1,20 @@
 const express = require("express");
 const router = express.Router();
+
 const {
   getChoferes,
-  crearChofer,
   actualizarChofer,
-  eliminarChofer
+  buscarChoferes
 } = require("../controllers/chofer.controller");
 
+// Ruta para listar todos los choferes
 router.get("/", getChoferes);
-router.post("/", crearChofer);
+
+// Ruta para actualizar estado del chofer
 router.put("/:id", actualizarChofer);
-router.delete("/:id", eliminarChofer);
+
+// Ruta para buscar choferes por nombre o apellido
+router.get("/buscar", buscarChoferes);
 
 module.exports = router;
+

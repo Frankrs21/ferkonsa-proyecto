@@ -16,52 +16,49 @@ const getChoferes = async (req, res) => {
   }
 };
 
-// Crear nuevo chofer
-const crearChofer = async (req, res) => {
-  const { id_usuario, id_estado_general } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO chofer (id_usuario, id_estado_general) VALUES ($1, $2)",
-      [id_usuario, id_estado_general]
-    );
-    res.status(201).json({ mensaje: "Chofer creado correctamente" });
-  } catch (err) {
-    console.error("Error al crear chofer:", err);
-    res.status(500).json({ error: "Error al crear chofer" });
-  }
-};
-
-// Actualizar chofer
+// Actualizar estado del chofer (disponible/ocupado)
 const actualizarChofer = async (req, res) => {
   const { id } = req.params;
   const { id_estado_general } = req.body;
+
   try {
     await pool.query(
       "UPDATE chofer SET id_estado_general = $1 WHERE id_chofer = $2",
       [id_estado_general, id]
     );
-    res.json({ mensaje: "Chofer actualizado correctamente" });
+    res.json({ mensaje: "Estado del chofer actualizado correctamente" });
   } catch (err) {
     console.error("Error al actualizar chofer:", err);
     res.status(500).json({ error: "Error al actualizar chofer" });
   }
 };
 
-// Eliminar chofer
-const eliminarChofer = async (req, res) => {
-  const { id } = req.params;
+// Buscar chofer por nombre o apellido
+const buscarChoferes = async (req, res) => {
+  const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    return res.status(400).json({ error: "El parámetro 'query' es requerido." });
+  }
+
   try {
-    await pool.query("DELETE FROM chofer WHERE id_chofer = $1", [id]);
-    res.json({ mensaje: "Chofer eliminado correctamente" });
+    const result = await pool.query(`
+      SELECT ch.id_chofer, us.nombre, us.apellido, us.correo, ch.id_estado_general
+      FROM chofer ch
+      JOIN usuario us ON ch.id_usuario = us.id_usuario
+      WHERE LOWER(us.nombre) LIKE LOWER($1) OR LOWER(us.apellido) LIKE LOWER($1)
+      ORDER BY ch.id_chofer ASC
+    `, [`%${query}%`]);
+
+    res.json(result.rows);
   } catch (err) {
-    console.error("Error al eliminar chofer:", err);
-    res.status(500).json({ error: "Error al eliminar chofer" });
+    console.error("Error al buscar choferes:", err);
+    res.status(500).json({ error: "Error al buscar choferes" });
   }
 };
 
 module.exports = {
   getChoferes,
-  crearChofer,
   actualizarChofer,
-  eliminarChofer
+  buscarChoferes
 };
