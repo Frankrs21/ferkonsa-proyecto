@@ -27,7 +27,7 @@ export default function InicioAdmin() {
     {
       titulo: "Gestión de Choferes",
       descripcion: "Ver choferes y controlar disponibilidad.",
-      ruta: "/admin/usuarios/listar?rol=2",
+      ruta: "/admin/choferes/listar",
       icono: <UserCog size={40} />
     },
     {

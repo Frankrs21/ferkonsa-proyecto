@@ -4,19 +4,24 @@ import {
   actualizarUsuario,
   eliminarUsuario,
 } from "../../services/apiUsuarios";
+import ModalConfirmar from "../ui/ModalConfirmar";
+import ModalExito from "../ui/ModalExito";
+import BotonRegresar from "../ui/BotonRegresar";
+import { Pencil, Trash2, Search } from "lucide-react";
 
 export default function UsuariosListar() {
   const [usuarios, setUsuarios] = useState([]);
   const [filtros, setFiltros] = useState({ rol: "", estado: "" });
   const [busqueda, setBusqueda] = useState("");
   const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
 
-  // Solo se ejecuta al montar el componente
   useEffect(() => {
-    cargarUsuarios(); // opcional si deseas precargar todo
+    cargarUsuarios();
   }, []);
 
-  // Función que ejecuta la búsqueda cuando haces clic en "Buscar"
   const cargarUsuarios = async () => {
     const filtrosCompletos = {};
 
@@ -35,16 +40,20 @@ export default function UsuariosListar() {
   const handleGuardar = async () => {
     await actualizarUsuario(usuarioEditando.id_usuario, usuarioEditando);
     setUsuarioEditando(null);
+    setMostrarModalExito(true);
     cargarUsuarios();
   };
 
-  const handleEliminar = async (id) => {
-    await eliminarUsuario(id);
+  const handleEliminar = async () => {
+    await eliminarUsuario(usuarioAEliminar);
+    setMostrarModalConfirmar(false);
+    setMostrarModalExito(true);
     cargarUsuarios();
   };
 
   return (
     <div className="p-6 font-roboto bg-gray-100 min-h-screen">
+      <BotonRegresar />
       <h1 className="text-3xl font-bold text-[#ff0400] mb-6">Gestión de Usuarios</h1>
 
       {/* Filtros */}
@@ -79,9 +88,10 @@ export default function UsuariosListar() {
 
         <button
           onClick={cargarUsuarios}
-          className="bg-[#ff0400] text-white px-4 py-2 rounded"
+          title="Buscar"
+          className="bg-[#ff0400] hover:bg-[#e60000] text-white p-2 rounded flex items-center justify-center"
         >
-          Buscar
+          <Search size={20} />
         </button>
       </div>
 
@@ -95,7 +105,7 @@ export default function UsuariosListar() {
             <th className="p-2">Correo</th>
             <th className="p-2">Rol</th>
             <th className="p-2">Estado</th>
-            <th className="p-2">Acciones</th>
+            <th className="p-2 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -150,35 +160,42 @@ export default function UsuariosListar() {
                   {u.id_estado_usuario === 1 ? "Pendiente" : "Activo"}
                 </td>
 
-                <td className="p-2 flex gap-2">
+                <td className="p-2 flex gap-2 justify-center">
                   {usuarioEditando?.id_usuario === u.id_usuario ? (
                     <>
                       <button
                         onClick={handleGuardar}
-                        className="bg-green-500 text-white px-2 py-1 rounded"
+                        className="text-green-600 hover:text-green-800"
+                        title="Guardar"
                       >
-                        Guardar
+                        ✔️
                       </button>
                       <button
                         onClick={() => setUsuarioEditando(null)}
-                        className="bg-gray-300 px-2 py-1 rounded"
+                        className="text-gray-600 hover:text-gray-800"
+                        title="Cancelar"
                       >
-                        Cancelar
+                        ❌
                       </button>
                     </>
                   ) : (
                     <>
                       <button
                         onClick={() => setUsuarioEditando(u)}
-                        className="bg-yellow-400 px-2 py-1 rounded"
+                        className="text-yellow-500 hover:text-yellow-700"
+                        title="Editar"
                       >
-                        Editar
+                        <Pencil size={20} />
                       </button>
                       <button
-                        onClick={() => handleEliminar(u.id_usuario)}
-                        className="bg-red-500 text-white px-2 py-1 rounded"
+                        onClick={() => {
+                          setUsuarioAEliminar(u.id_usuario);
+                          setMostrarModalConfirmar(true);
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                        title="Eliminar"
                       >
-                        Eliminar
+                        <Trash2 size={20} />
                       </button>
                     </>
                   )}
@@ -188,6 +205,22 @@ export default function UsuariosListar() {
           )}
         </tbody>
       </table>
+
+      {/* MODALES */}
+      {mostrarModalConfirmar && (
+        <ModalConfirmar
+          mensaje="¿Deseas eliminar este usuario?"
+          onConfirmar={handleEliminar}
+          onCancelar={() => setMostrarModalConfirmar(false)}
+        />
+      )}
+
+      {mostrarModalExito && (
+        <ModalExito
+          mensaje="Operación realizada exitosamente"
+          onClose={() => setMostrarModalExito(false)}
+        />
+      )}
     </div>
   );
 }

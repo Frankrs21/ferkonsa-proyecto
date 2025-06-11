@@ -9,6 +9,9 @@ import UsuariosAgregar from "../components/admin/UsuariosAgregar";
 // Vehículos
 import VehiculosAdmin from "../components/admin/VehiculosAdmin";
 
+//Choferes 
+import ChoferesAdmin from "../components/admin/ChoferesAdmin";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -25,6 +28,7 @@ export default function AppRouter() {
           {/* Gestión de vehículos */}
           <Route path="vehiculos/listar" element={<VehiculosAdmin />} />
 
+            <Route path="choferes/listar" element={<ChoferesAdmin />} />
           {/* Aquí luego agregarás choferes, asignaciones, reportes... */}
         </Route>
 
