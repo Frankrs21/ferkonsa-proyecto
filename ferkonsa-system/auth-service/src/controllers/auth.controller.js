@@ -4,15 +4,15 @@ const sendApprovalEmail = require('../emails/approvalEmail');
 
 exports.register = async (req, res) => {
   try {
-    const { nombre, apellido, correo, contrasena, rol } = req.body;
+    const { nombre, apellido, correo, contraseña, rol } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO usuario (nombre, apellido, correo, contrasena, id_rol, id_estado_usuario)
+      `INSERT INTO usuario (nombre, apellido, correo, contraseña, id_rol, id_estado_usuario)
        VALUES ($1, $2, $3, crypt($4, gen_salt('bf')),
        (SELECT id_rol FROM rol WHERE LOWER(descripcion) = LOWER($5)),
        (SELECT id_estado_usuario FROM estado_usuario WHERE LOWER(descripcion) = 'pendiente'))
        RETURNING *`,
-      [nombre, apellido, correo, contrasena, rol]
+      [nombre, apellido, correo, contraseña, rol]
     );
 
     const usuario = result.rows[0];

@@ -4,14 +4,13 @@ services:
   auth-service:
     build: ./auth-service
     ports:
-      - "3001:3001"
-    environment:
-      - PORT=3001
-      - DB_HOST=host.docker.internal
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=2105.Satu
-      - DB_NAME=proyecto_ferkonsa
+      - "3000:3000"
+    env_file:
+      - ./auth-service/.env
+    volumes:
+      - ./auth-service:/app
+    restart: always
+
   logistics-service:
     build: ./logistics-service
     ports:
