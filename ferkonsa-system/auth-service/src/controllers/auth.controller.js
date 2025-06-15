@@ -16,12 +16,25 @@ exports.register = async (req, res) => {
     );
 
     const usuario = result.rows[0];
-    const token = generateToken({ id: usuario.id_usuario, rol });
-    await sendApprovalEmail(usuario, token);
 
-    res.status(201).json({ mensaje: 'Usuario registrado y correo enviado al superadmin' });
-  } catch (error) {
-    console.error('❌ Error en registro:', error);
-    res.status(500).json({ error: 'Error al registrar usuario' });
-  }
+// Obtener la descripción del rol desde la tabla
+    const rolDescripcion = await pool.query(
+      `SELECT descripcion FROM rol WHERE id_rol = $1`,
+      [usuario.id_rol]
+    );
+
+    const rolTexto = rolDescripcion.rows[0]?.descripcion || 'desconocido';
+
+    // Generar token con rol descriptivo
+    const token = generateToken({ id: usuario.id_usuario, rol: rolTexto });
+
+    // Enviar el correo con el rol incluido
+    await sendApprovalEmail({ ...usuario, rol: rolTexto }, token);
+
+
+        res.status(201).json({ mensaje: 'Usuario registrado y correo enviado al superadmin' });
+      } catch (error) {
+        console.error('❌ Error en registro:', error);
+        res.status(500).json({ error: 'Error al registrar usuario' });
+      }
 };
