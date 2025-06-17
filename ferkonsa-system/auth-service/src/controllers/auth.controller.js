@@ -3,6 +3,7 @@ const generateToken = require('../utils/generateToken');
 const sendApprovalEmail = require('../emails/approvalEmail');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const sendEmail = require('../emails/sendEmail');
 
 exports.register = async (req, res) => {
   try {
@@ -87,5 +88,60 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error('❌ Error en login:', err);
     res.status(500).json({ error: 'Error en login' });
+  }
+};
+
+exports.recuperarPassword = async (req, res) => {
+  try {
+    const { correo } = req.body;
+
+    const result = await pool.query(
+      'SELECT * FROM usuario WHERE correo = $1',
+      [correo]
+    );
+
+    const usuario = result.rows[0];
+
+    console.log("📩 Usuario encontrado para recuperación:", usuario); // ✅ Agrega este log
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Correo no registrado' });
+    }
+
+    const token = jwt.sign({ id: usuario.id_usuario }, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+    const url = `${process.env.RESET_PASSWORD_URL}/${token}`;
+    const html = `
+      <h2>Recuperación de contraseña</h2>
+      <p>Haz clic en el botón para restablecer tu contraseña:</p>
+      <a href="${url}" style="padding:10px 20px;background:#ff0400;color:white;text-decoration:none;border-radius:6px;">Restablecer contraseña</a>
+      <p>Este enlace es válido por 15 minutos.</p>
+    `;
+
+    await sendEmail(usuario.correo, 'Recuperar contraseña', html);
+    res.json({ mensaje: 'Se ha enviado un correo para recuperar tu contraseña' });
+  } catch (error) {
+    console.error('❌ Error al enviar recuperación:', error.message);
+    res.status(500).json({ error: 'Error en el proceso de recuperación' });
+  }
+};
+
+exports.restablecerPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { nuevaContrasena } = req.body;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const hashed = await bcrypt.hash(nuevaContrasena, 10);
+
+    await pool.query(
+      'UPDATE usuario SET contraseña = $1 WHERE id_usuario = $2',
+      [hashed, decoded.id]
+    );
+
+    res.json({ mensaje: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('❌ Error al restablecer:', error.message);
+    res.status(400).json({ error: 'Token inválido o expirado' });
   }
 };
