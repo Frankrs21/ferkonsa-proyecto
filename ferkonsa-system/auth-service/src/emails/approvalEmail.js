@@ -1,17 +1,14 @@
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const nodemailer = require('nodemailer');
 
-const sendApprovalEmail = async (user, token) => {
-  const approvalUrl = `${process.env.FRONT_URL}/auth/approve/${token}`;
+const sendApprovalEmail = async (usuario, token) => {
+  const approvalUrl = `${process.env.APPROVAL_BASE_URL}/${encodeURIComponent(token)}`;
+
   const html = `
     <h2>Solicitud de nuevo usuario</h2>
-    <p>Nombre: ${user.nombre} ${user.apellido}</p>
-    <p>Correo: ${user.correo}</p>
-    <p>Rol: ${user.rol}</p>
-    <a href="${approvalUrl}" style="padding:10px 20px;background:#ff0400;color:white;border-radius:5px;text-decoration:none;">Aprobar Usuario</a>
-    <p>O usa este enlace si el botón no funciona:</p>
-    <p>${approvalUrl}</p>
-    <small>Se mostrará un mensaje directo, no se redirigirá a otra web.</small>
+    <p><strong>Nombre:</strong> ${usuario.nombre} ${usuario.apellido}</p>
+    <p><strong>Correo:</strong> ${usuario.correo}</p>
+    <p><strong>Rol:</strong> ${usuario.rol}</p>
+    <a href="${approvalUrl}" style="padding:10px 20px;background:#ff0400;color:white;text-decoration:none;border-radius:8px;">Aprobar Usuario</a>
   `;
 
   const transporter = nodemailer.createTransport({
@@ -25,10 +22,9 @@ const sendApprovalEmail = async (user, token) => {
   await transporter.sendMail({
     from: `"FERKONSA" <${process.env.EMAIL_USER}>`,
     to: process.env.SUPERADMIN_EMAIL,
-    subject: "Solicitud de nuevo usuario",
+    subject: 'Solicitud de nuevo usuario',
     html
   });
 };
 
 module.exports = sendApprovalEmail;
-
